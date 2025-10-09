@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  feedFormulations FeedFormulation[]
+
+  @@map("users")
+}
+
+// Feed Formulation model
+model FeedFormulation {
+  id               String   @id @default(cuid())
+  feedBatchWeight  Float
+  species          String
+  subspecies       String?
+  animalType       String?
+  phase            String
+  crudeProtein     Float?
+  energy           Float?
+  includePremix    Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ingredients FeedFormulationIngredient[]
+
+  @@map("feed_formulations")
+}
+
+// Ingredient model
+model Ingredient {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  category    String
+  speciesId   String?  // Reference to species
+  crudeProtein Float?
+  energy      Float?
+  tdn         Float?   // TDN for non-poultry species
+  fiber       Float?   // Added fiber field
+  lysine      Float?   // Added lysine field
+  methionine  Float?   // Added methionine field
+  calcium     Float?   // Added calcium field
+  phosphorus  Float?   // Added phosphorus field
+  salt        Float?   @default(0.3) // Added salt field with default 0.3
+  cost        Float?
+  premix      Float?   @default(1) // Added premix field with default 1
+  maxInclusion Float?
+  minInclusion Float?
+  description String?  // Added description field
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  species          Species? @relation(fields: [speciesId], references: [id], onDelete: SetNull)
+  feedFormulations FeedFormulationIngredient[]
+
+  @@map("ingredients")
+}
+
+// Junction table for many-to-many relationship
+model FeedFormulationIngredient {
+  id               String  @id @default(cuid())
+  percentage       Float
+  cost             Float?
+  createdAt        DateTime @default(now())
+
+  // Relations
+  feedFormulationId String
+  feedFormulation   FeedFormulation @relation(fields: [feedFormulationId], references: [id], onDelete: Cascade)
+  
+  ingredientId     String
+  ingredient       Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@map("feed_formulation_ingredients")
+}
+
+// Hierarchical Species Management Models
+
+// Species model
+model Species {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  notIncluded Boolean  @default(false) // If true, skip subspecies/animal types/phases
+  includeSubspecies Boolean @default(true) // For notIncluded species: include subspecies?
+  includeAnimalTypes Boolean @default(true) // For notIncluded species: include animal types?
+  includePhases Boolean @default(true) // For notIncluded species: include phases?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  subspecies   Subspecies[]
+  animalTypes  AnimalType[]  // Direct relation to animal types
+  phases       Phase[]       // Direct relation to phases
+  ingredients  Ingredient[]  // Relation to ingredients
+
+  @@map("species")
+}
+
+// Subspecies model
+model Subspecies {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  speciesId   String
+  species     Species     @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+  animalTypes AnimalType[]
+
+  @@unique([speciesId, name])
+  @@map("subspecies")
+}
+
+// Animal Type model
+model AnimalType {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  subspeciesId String?
+  subspecies   Subspecies? @relation(fields: [subspeciesId], references: [id], onDelete: Cascade)
+  speciesId    String      // Direct reference to main species
+  species      Species     @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+  phases       Phase[]
+
+  @@unique([speciesId, name])
+  @@map("animal_types")
+}
+
+// Phase model
+model Phase {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  crudeProtein Float?  // Target crude protein percentage
+  meKcalPerKg  Float?  // ME Kcal/kg
+  calcium      Float?  // Calcium percentage
+  availablePhosphorus Float?  // Available phosphorus percentage
+  lysine       Float?  // Lysine percentage
+  methionine   Float?  // Methionine percentage
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  animalTypeId String?
+  animalType   AnimalType? @relation(fields: [animalTypeId], references: [id], onDelete: Cascade)
+  speciesId    String      // Direct reference to main species
+  species      Species     @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+
+  @@unique([speciesId, name])
+  @@map("phases")
+}
+
+// Species configuration model (keeping for backward compatibility)
+model SpeciesConfig {
+  id         String   @id @default(cuid())
+  species    String
+  subspecies String?
+  animalType String?
+  phase      String
+  minProtein Float?
+  maxProtein Float?
+  minEnergy  Float?
+  maxEnergy  Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([species, subspecies, animalType, phase])
+  @@map("species_configs")
+}

@@ -79,7 +79,8 @@ class CalculationEngine {
     // Step 5: Apply Pearson's Square Method
     const mainIngredients = this.applyPearsonsSquare(
       categorized,
-      remainingNeeds
+      remainingNeeds,
+      fixedIngredient
     );
 
     // Step 6: Combine all main ingredients
@@ -255,18 +256,30 @@ class CalculationEngine {
   /**
    * Apply Pearson's Square Method
    */
-  applyPearsonsSquare(categorized, remainingNeeds) {
+  applyPearsonsSquare(categorized, remainingNeeds, fixedIngredient = null) {
     const { energySources, proteinSources, mediumSources } = categorized;
     const { remainingParts, crudeProtein: targetCP } = remainingNeeds;
 
-    // Combine energy and medium sources for LPS
-    const lpsIngredients = [...energySources, ...mediumSources];
+    // Filter out fixed ingredient from regular ingredients to avoid duplication
+    const filterOutFixed = (ingredients) => {
+      if (!fixedIngredient) return ingredients;
+      return ingredients.filter(ing => 
+        !ing.name.toLowerCase().includes('rice bran') && 
+        !ing.name.toLowerCase().includes('rice polish')
+      );
+    };
+
+    // Combine energy and medium sources for LPS, excluding fixed ingredient
+    const lpsIngredients = filterOutFixed([...energySources, ...mediumSources]);
     
     if (lpsIngredients.length === 0) {
       throw new Error('No energy/medium sources selected. Please select at least one energy source.');
     }
 
-    if (proteinSources.length === 0) {
+    // Filter protein sources to exclude fixed ingredient
+    const filteredProteinSources = filterOutFixed(proteinSources);
+    
+    if (filteredProteinSources.length === 0) {
       throw new Error('No protein sources selected. Please select at least one protein source.');
     }
 
@@ -275,8 +288,8 @@ class CalculationEngine {
       sum + (ing.crudeProtein || 0), 0
     ) / lpsIngredients.length;
 
-    // Get HPS with highest CP
-    const hps = proteinSources.reduce((max, ing) => 
+    // Get HPS with highest CP from filtered protein sources
+    const hps = filteredProteinSources.reduce((max, ing) => 
       (ing.crudeProtein || 0) > (max.crudeProtein || 0) ? ing : max
     );
     const hpsCP = hps.crudeProtein || 0;

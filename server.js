@@ -27,7 +27,7 @@ app.use(cookieParser());
 // Routes - Load routes safely
 try {
   app.use('/api/auth', require('./routes/auth'));
-  app.use('/api/feed-formulations', require('./routes/feedFormulations'));
+  app.use('/api/feedFormulations', require('./routes/feedFormulations'));
   app.use('/api/ingredients', require('./routes/ingredients'));
   app.use('/api/species', require('./routes/species'));
   app.use('/api/admin', require('./routes/admin'));

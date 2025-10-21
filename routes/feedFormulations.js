@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { verifyToken } = require('./auth');
+const calculationEngine = require('../services/calculationEngine');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -242,7 +243,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Calculate feed formulation (placeholder for calculation logic)
+// Calculate feed formulation using Pearson's Square Method
 router.post('/calculate', verifyToken, async (req, res) => {
   try {
     const {
@@ -251,8 +252,6 @@ router.post('/calculate', verifyToken, async (req, res) => {
       subspecies,
       animalType,
       phase,
-      crudeProtein,
-      energy,
       includePremix,
       availableIngredients = []
     } = req.body;
@@ -264,34 +263,80 @@ router.post('/calculate', verifyToken, async (req, res) => {
       });
     }
 
-    // TODO: Implement actual feed formulation calculation algorithm
-    // This is a placeholder response
-    const calculatedFormulation = {
+    if (availableIngredients.length === 0) {
+      return res.status(400).json({
+        error: 'Please select at least one ingredient'
+      });
+    }
+
+    // Fetch phase nutritional requirements from database
+    // Phase can be either ID or name, try both
+    let phaseData = await prisma.phase.findUnique({
+      where: { id: phase }
+    });
+
+    // If not found by ID, try by name
+    if (!phaseData) {
+      const speciesRecords = await prisma.species.findMany({
+        where: { name: species },
+        select: { id: true }
+      });
+
+      phaseData = await prisma.phase.findFirst({
+        where: {
+          name: phase,
+          speciesId: {
+            in: speciesRecords.map(s => s.id)
+          }
+        }
+      });
+    }
+
+    if (!phaseData) {
+      return res.status(404).json({
+        error: `Phase '${phase}' not found for species '${species}'. Please ensure the phase exists in the database.`
+      });
+    }
+
+    // Prepare nutritional requirements
+    const nutritionalRequirements = {
+      crudeProtein: phaseData.crudeProtein,
+      meKcalPerKg: phaseData.meKcalPerKg,
+      calcium: phaseData.calcium,
+      availablePhosphorus: phaseData.availablePhosphorus,
+      lysine: phaseData.lysine,
+      methionine: phaseData.methionine
+    };
+
+    // Prepare calculation parameters
+    const calculationParams = {
       feedBatchWeight: parseFloat(feedBatchWeight),
       species,
       subspecies,
       animalType,
       phase,
-      crudeProtein: crudeProtein ? parseFloat(crudeProtein) : null,
-      energy: energy ? parseFloat(energy) : null,
-      includePremix,
-      calculatedIngredients: availableIngredients.map(ingredient => ({
-        ingredientId: ingredient.id,
-        name: ingredient.name,
-        percentage: Math.random() * 20, // Placeholder calculation
-        cost: ingredient.cost ? parseFloat(ingredient.cost) : 0
-      })),
-      totalCost: availableIngredients.reduce((sum, ing) => sum + (ing.cost || 0), 0),
-      calculatedAt: new Date().toISOString()
+      nutritionalRequirements,
+      availableIngredients,
+      includePremix
     };
+
+    // Run calculation
+    const result = await calculationEngine.calculate(calculationParams);
 
     res.json({
       message: 'Feed formulation calculated successfully',
-      formulation: calculatedFormulation
+      ...result
     });
+
   } catch (error) {
     console.error('Calculate feed formulation error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    // Return user-friendly error messages
+    if (error.message) {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Internal server error during calculation' });
   }
 });
 

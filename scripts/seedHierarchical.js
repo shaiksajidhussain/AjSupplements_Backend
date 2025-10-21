@@ -97,8 +97,8 @@ async function seedHierarchicalSpecies() {
     // Create Animal Types for Chicken
     const broiler = await prisma.animalType.upsert({
       where: { 
-        subspeciesId_name: {
-          subspeciesId: chicken.id,
+        speciesId_name: {
+          speciesId: poultry.id,
           name: 'Broilers'
         }
       },
@@ -106,14 +106,15 @@ async function seedHierarchicalSpecies() {
       create: {
         name: 'Broilers',
         description: 'Chickens raised for meat production',
-        subspeciesId: chicken.id
+        subspeciesId: chicken.id,
+        speciesId: poultry.id
       }
     });
 
     const layer = await prisma.animalType.upsert({
       where: { 
-        subspeciesId_name: {
-          subspeciesId: chicken.id,
+        speciesId_name: {
+          speciesId: poultry.id,
           name: 'Layers'
         }
       },
@@ -121,15 +122,16 @@ async function seedHierarchicalSpecies() {
       create: {
         name: 'Layers',
         description: 'Chickens raised for egg production',
-        subspeciesId: chicken.id
+        subspeciesId: chicken.id,
+        speciesId: poultry.id
       }
     });
 
     // Create Phases for Broilers
     await prisma.phase.upsert({
       where: { 
-        animalTypeId_name: {
-          animalTypeId: broiler.id,
+        speciesId_name: {
+          speciesId: poultry.id,
           name: 'Starter'
         }
       },
@@ -137,18 +139,21 @@ async function seedHierarchicalSpecies() {
       create: {
         name: 'Starter',
         description: 'Early growth phase (0-3 weeks)',
-        minProtein: 22,
-        maxProtein: 24,
-        minEnergy: 3000,
-        maxEnergy: 3200,
-        animalTypeId: broiler.id
+        crudeProtein: 23,
+        meKcalPerKg: 3100,
+        calcium: 1.0,
+        availablePhosphorus: 0.46,
+        lysine: 1.2,
+        methionine: 0.5,
+        animalTypeId: broiler.id,
+        speciesId: poultry.id
       }
     });
 
     await prisma.phase.upsert({
       where: { 
-        animalTypeId_name: {
-          animalTypeId: broiler.id,
+        speciesId_name: {
+          speciesId: poultry.id,
           name: 'Grower'
         }
       },
@@ -156,18 +161,21 @@ async function seedHierarchicalSpecies() {
       create: {
         name: 'Grower',
         description: 'Growth phase (3-6 weeks)',
-        minProtein: 20,
-        maxProtein: 22,
-        minEnergy: 3100,
-        maxEnergy: 3300,
-        animalTypeId: broiler.id
+        crudeProtein: 21,
+        meKcalPerKg: 3200,
+        calcium: 1.0,
+        availablePhosphorus: 0.46,
+        lysine: 1.2,
+        methionine: 0.5,
+        animalTypeId: broiler.id,
+        speciesId: poultry.id
       }
     });
 
     await prisma.phase.upsert({
       where: { 
-        animalTypeId_name: {
-          animalTypeId: broiler.id,
+        speciesId_name: {
+          speciesId: poultry.id,
           name: 'Finisher'
         }
       },
@@ -175,108 +183,89 @@ async function seedHierarchicalSpecies() {
       create: {
         name: 'Finisher',
         description: 'Final growth phase (6+ weeks)',
-        minProtein: 18,
-        maxProtein: 20,
-        minEnergy: 3200,
-        maxEnergy: 3400,
-        animalTypeId: broiler.id
+        crudeProtein: 19,
+        meKcalPerKg: 3300,
+        calcium: 1.0,
+        availablePhosphorus: 0.46,
+        lysine: 1.2,
+        methionine: 0.5,
+        animalTypeId: broiler.id,
+        speciesId: poultry.id
       }
     });
 
     // Create Phases for Layers
     await prisma.phase.upsert({
       where: { 
-        animalTypeId_name: {
-          animalTypeId: layer.id,
-          name: 'Chick'
+        speciesId_name: {
+          speciesId: poultry.id,
+          name: 'Layer Chick'
         }
       },
       update: {},
       create: {
-        name: 'Chick',
+        name: 'Layer Chick',
         description: 'Early growth phase (0-6 weeks)',
-        minProtein: 20,
-        maxProtein: 22,
-        minEnergy: 2900,
-        maxEnergy: 3100,
-        animalTypeId: layer.id
+        crudeProtein: 21,
+        meKcalPerKg: 3000,
+        calcium: 1.0,
+        availablePhosphorus: 0.46,
+        lysine: 1.2,
+        methionine: 0.5,
+        animalTypeId: layer.id,
+        speciesId: poultry.id
       }
     });
 
     await prisma.phase.upsert({
       where: { 
-        animalTypeId_name: {
-          animalTypeId: layer.id,
-          name: 'Grower'
+        speciesId_name: {
+          speciesId: poultry.id,
+          name: 'Layer Grower'
         }
       },
       update: {},
       create: {
-        name: 'Grower',
+        name: 'Layer Grower',
         description: 'Growth phase (6-18 weeks)',
-        minProtein: 16,
-        maxProtein: 18,
-        minEnergy: 2800,
-        maxEnergy: 3000,
-        animalTypeId: layer.id
+        crudeProtein: 16,        // Slightly lower for growing phase
+        meKcalPerKg: 2700,       // Moderate energy for growth
+        calcium: 1.2,            // Moderate calcium for growing birds
+        availablePhosphorus: 0.45, // Standard phosphorus
+        lysine: 0.8,             // Adequate lysine for growth
+        methionine: 0.4,         // Standard methionine
+        animalTypeId: layer.id,
+        speciesId: poultry.id
       }
     });
 
     await prisma.phase.upsert({
       where: { 
-        animalTypeId_name: {
-          animalTypeId: layer.id,
-          name: 'Layer'
+        speciesId_name: {
+          speciesId: poultry.id,
+          name: 'Layer Production'
         }
       },
       update: {},
       create: {
-        name: 'Layer',
+        name: 'Layer Production',
         description: 'Egg production phase (18+ weeks)',
-        minProtein: 16,
-        maxProtein: 18,
-        minEnergy: 2750,
-        maxEnergy: 2950,
-        animalTypeId: layer.id
+        crudeProtein: 18,        // Updated from your specification
+        meKcalPerKg: 2600,       // Updated from your specification
+        calcium: 3.0,            // Updated from your specification
+        availablePhosphorus: 0.4, // Updated from your specification
+        lysine: 0.7,             // Updated from your specification
+        methionine: 0.35,        // Updated from your specification
+        animalTypeId: layer.id,
+        speciesId: poultry.id
       }
     });
 
-    // Create Subspecies and Animal Types for Cattle
-    const dairyCattle = await prisma.subspecies.upsert({
+    // For now, just create basic cattle phases without subspecies
+    await prisma.phase.upsert({
       where: { 
         speciesId_name: {
           speciesId: cattle.id,
-          name: 'Dairy Cattle'
-        }
-      },
-      update: {},
-      create: {
-        name: 'Dairy Cattle',
-        description: 'Cattle bred for milk production',
-        speciesId: cattle.id
-      }
-    });
-
-    const dairyCattleType = await prisma.animalType.upsert({
-      where: { 
-        subspeciesId_name: {
-          subspeciesId: dairyCattle.id,
-          name: 'Dairy'
-        }
-      },
-      update: {},
-      create: {
-        name: 'Dairy',
-        description: 'Milk-producing cattle',
-        subspeciesId: dairyCattle.id
-      }
-    });
-
-    // Create Phases for Dairy Cattle
-    await prisma.phase.upsert({
-      where: { 
-        animalTypeId_name: {
-          animalTypeId: dairyCattleType.id,
           name: 'Calf Starter'
         }
       },
@@ -284,49 +273,13 @@ async function seedHierarchicalSpecies() {
       create: {
         name: 'Calf Starter',
         description: 'Young calf nutrition (0-3 months)',
-        minProtein: 20,
-        maxProtein: 22,
-        minEnergy: 3000,
-        maxEnergy: 3200,
-        animalTypeId: dairyCattleType.id
-      }
-    });
-
-    await prisma.phase.upsert({
-      where: { 
-        animalTypeId_name: {
-          animalTypeId: dairyCattleType.id,
-          name: 'High Yielding'
-        }
-      },
-      update: {},
-      create: {
-        name: 'High Yielding',
-        description: 'High milk production phase',
-        minProtein: 16,
-        maxProtein: 18,
-        minEnergy: 2600,
-        maxEnergy: 2800,
-        animalTypeId: dairyCattleType.id
-      }
-    });
-
-    await prisma.phase.upsert({
-      where: { 
-        animalTypeId_name: {
-          animalTypeId: dairyCattleType.id,
-          name: 'Lactating'
-        }
-      },
-      update: {},
-      create: {
-        name: 'Lactating',
-        description: 'Active lactation phase',
-        minProtein: 16,
-        maxProtein: 18,
-        minEnergy: 2600,
-        maxEnergy: 2800,
-        animalTypeId: dairyCattleType.id
+        crudeProtein: 21,
+        meKcalPerKg: 3100,
+        calcium: 1.0,
+        availablePhosphorus: 0.46,
+        lysine: 1.2,
+        methionine: 0.5,
+        speciesId: cattle.id
       }
     });
 

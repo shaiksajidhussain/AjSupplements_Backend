@@ -185,27 +185,26 @@ class CalculationEngine {
   }
 
   /**
-   * Get fixed ingredient (Rice Polish for v1)
+   * Get fixed ingredient (any Medium Source ingredient)
    */
   getFixedIngredient(categorized) {
-    // For v1: Try to find Rice Polish and fix it at 10 parts
-    const ricePolish = categorized.all.find(ing => 
-      ing.name.toLowerCase().includes('rice polish') || 
-      ing.name.toLowerCase().includes('rice bran')
+    // Check for any Medium Source ingredient and fix it at 10 parts
+    const mediumSource = categorized.all.find(ing => 
+      ing.category === 'Medium Source'
     );
 
-    if (ricePolish) {
+    if (mediumSource) {
       return {
-        ingredientId: ricePolish.id,
-        name: ricePolish.name,
+        ingredientId: mediumSource.id,
+        name: mediumSource.name,
         parts: this.FIXED_INGREDIENT_PARTS,
-        crudeProtein: ricePolish.crudeProtein || 0,
-        energy: ricePolish.energy || 0,
-        calcium: ricePolish.calcium || 0,
-        phosphorus: ricePolish.phosphorus || 0,
-        lysine: ricePolish.lysine || 0,
-        methionine: ricePolish.methionine || 0,
-        cost: ricePolish.cost || 0,
+        crudeProtein: mediumSource.crudeProtein || 0,
+        energy: mediumSource.energy || 0,
+        calcium: mediumSource.calcium || 0,
+        phosphorus: mediumSource.phosphorus || 0,
+        lysine: mediumSource.lysine || 0,
+        methionine: mediumSource.methionine || 0,
+        cost: mediumSource.cost || 0,
         isFixed: true
       };
     }
@@ -264,8 +263,7 @@ class CalculationEngine {
     const filterOutFixed = (ingredients) => {
       if (!fixedIngredient) return ingredients;
       return ingredients.filter(ing => 
-        !ing.name.toLowerCase().includes('rice bran') && 
-        !ing.name.toLowerCase().includes('rice polish')
+        ing.category !== 'Medium Source'
       );
     };
 

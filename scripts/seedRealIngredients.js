@@ -74,7 +74,7 @@ async function seedRealIngredients() {
         category: 'Energy Source',
         crudeProtein: 11.0,
         energy: 3100,
-        calcium: 0.04,
+        calcium: 0.04,  
         phosphorus: 0.35,
         // availablePhosphorus: 0.11,
         lysine: 0.28,

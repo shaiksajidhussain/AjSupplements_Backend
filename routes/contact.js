@@ -10,7 +10,7 @@ const createTransporter = () => {
     secure: false, // true for 465, false for other ports
     auth: {
       user: process.env.EMAIL_USER || 'tmadem@ajsupplements.com',
-      pass: process.env.EMAIL_PASS || '!S]$q^o*3Q'
+      pass: process.env.EMAIL_PASS || ']0iSvBR=;'
     },
     tls: {
       rejectUnauthorized: false

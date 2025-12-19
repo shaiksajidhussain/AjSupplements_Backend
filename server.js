@@ -17,9 +17,12 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://www.ajsupplements.com'
+    'https://www.ajsupplements.com',
+    'https://ajsupplements.com'
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(cookieParser());
